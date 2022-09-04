@@ -1,37 +1,9 @@
+import {O_folder_file} from "https://deno.land/x/o_folder_file@0.3/O_folder_file.module.js"
 class O_url{
 
     constructor(
         s
     ){
-        this._s = s
-
-        this.s_dir_separator = null
-        this.s_file_name = null
-        this.s_path_name = null
-
-        this.s_protocol = null
-        this.s_windows_drive_letter = null
-    }
-    get s(){
-        return this._s
-    }
-    set s(value){
-        this._s = value
-        this.f_update_all()
-    }
-
-
-    f_update_all(){
-
-        // detect separator 
-        this.s_dir_separator = '/'
-        var n_count_backslash = this.s.filter(s=>s=='\\').length
-        var n_count_slash = this.s.filter(s=>s=='/').length 
-        if(n_count_backslash > n_count_slash){
-            this.s_dir_separator = '\\'
-        }
-
-
         // check if protocol
 
         // |-------------------- Schema-spezifischer Teil ---------------------|
@@ -41,32 +13,129 @@ class O_url{
         // Schema+ Benutzer Kennwort      Host      Port    Pfad      Query    Fragment
         // ⁺ (hier gleich Netzwerkprotokoll)
 
-        var s_sep = ""
-        var a_s_part = this.s.split(s_sep)
-        var s_tmp = this.s
-        if(a_s_part.length > 1){
-            this.s_protocol = a_s_part.shift()
-            s_tmp = a_s_part.join(s_sep)
-        }
-
-        var a_s_part = s_tmp.split(this.s_dir_separator)
-
-
-        // we have no chance of checkinf if the first part of the path is a 
-        // userpass domain port
-        // because the string 'maxmuster:geheim@www.example.com:8080' could be 
-        // the name of a folder/director in linux , try it!: '$ mkdir maxmuster:geheim@www.example.com:8080' 
-        var s_userpass_domain_port = a_s_part[0]
-
-        //domain names 
-        // They must start with a letter, end with a letter or digit, and have as interior characters only letters, digits, and hyphen. There are also some restrictions on the length. Labels must be 63 characters or less
 
         // file:///verzeichnis/unterverzeichnis/datei
         // \__/ \___________________________________/
         //   |                     |
         // Schema                  |
         //         Pfad zu einer lokalen Datei im Dateisystem des Rechners, der den URL interpretiert
+        this.o_URL = new URL(s)
+        this.s_protocol = this.o_URL.protocol.replaceAll(":", "")
+        this.s_schema = this.s_protocol
+        this.s_username = this.o_URL.username
+        this.s_password = this.o_URL.password
+        this.s_password = this.o_URL.password
+        this.s_hostname = this.o_URL.hostname
+        this.s_port = this.o_URL.port
+        this.n_port = parseInt(this.o_URL.port)
+        this.s_domainname = this.o_URL.hostname
+        this.s_query = this.o_URL.search
+        this.s_fragment = this.o_URL.hash
+        this.s_ipv4 = ''
+        this.s_ipv6 = ''
+        this.a_s_ip = []
+        this.a_s_ipv4 = []
+        this.a_s_ipv6 = []
+        this.o_folder_file = new O_folder_file(this.o_URL.pathname)
+        this.s_path = this.o_URL.pathname
+
+        
+        // var s_url = `curl ipinfo.io/216.58.194.46`
+        // this.o_ipinfo = Deno.run('curl ')
+
+        var s_domainname_trimmed = this.s_domainname.trim()
+        if(
+            s_domainname_trimmed.indexOf('[') == 0
+            &&
+            s_domainname_trimmed.indexOf(']') == (s_domainname_trimmed.length-1)
+        ){
+            var s_domainname_trimmed = s_domainname_trimmed.splice(1, s_domainname_trimmed.length-1);
+            this.s_ipv6 = s_domainname_trimmed
+            // var a_s_domainname_part = s_domainname_trimmed.split(":")
+            // 2606:4700:3033::ac43:b77f 
+        }
+
+        if(this.f_b_ipv4(this.s_domainname)){
+            this.s_ipv4 = this.s_domainname
+        }
+
 
     }
 
+    get s(){
+        return this._s
+    }
+    set s(value){
+        this._s = value
+        this.f_update_all()
+    }
+
+    async f_update_a_s_ip(){
+        var a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
+        this.a_s_ipv4 = []
+        this.a_s_ipv6 = []
+        for(var n_i in a_s_ip){
+            var s_ip = a_s_ip[n_i]
+
+            if(this.f_b_ipv4(s_ip)){
+                this.a_s_ipv4.push(s_ip)
+            }else{
+                this.a_s_ipv6.push(s_ip)
+            }
+        }
+
+    }
+
+    async f_a_s_ip_by_s_domainname(s_domainname){
+        const o_process = Deno.run(
+            {
+                cmd:['nslookup', s_domainname], 
+                stdout: "piped",
+                stderr: "piped",
+            }
+        )
+        const { n_code } = await o_process.status();
+        var a_s_address = []
+        const raw_output = await o_process.output();
+        await o_process.close()
+        await o_process.stderr.close()
+        const s_text = new TextDecoder().decode(raw_output);
+        const a_s_line = s_text.split('\n');
+        const s_search_name = "Name:"
+        const s_search_address = "Address:"
+        var b_search_name = false
+        var b_search_address = false
+
+        for(var n_i in a_s_line){
+            var s_line = a_s_line[n_i]
+            if(s_line.indexOf(s_search_name) == 0){
+                b_search_name = true
+                continue
+            }
+            if(b_search_name && s_line.indexOf(s_search_address) == 0){
+                a_s_address.push(s_line.slice(s_search_address.length).trim())
+            }
+            b_search_address = false
+            b_search_name = false
+        }
+        return a_s_address
+        // console.log(raw_output)
+        // return raw_output
+    }
+    
+    f_b_ipv4(s){
+        var a_n = this.s_domainname.trim().split('.')
+        var self = this
+        if(a_n.length == 4 && a_n.filter(n => self.f_b_string_is_numeric(n).length == 4)){
+            return true
+        }
+        return false
+    }
+    f_b_string_is_numeric(s){
+        return /^-?\d+$/.test(s);
+    }
+
+
 }
+
+export {O_url}
