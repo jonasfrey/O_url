@@ -17,17 +17,39 @@ assertEquals(o_url.s_fragment, "#ressource")
 
 ```
 ## convert domain name to ip address (nslookup) 
-```
-var o_url = new O_url("https://one.one.one.one")
-await o_url.f_update_a_s_ip()
-console.log(o_url)
-assertEquals(o_url.a_s_ipv4.filter(s => s == '1.1.1.1'),['1.1.1.1'])
+```javascript
+Deno.test(
+    "dns test",
+    async () => {
+        var o_url = new O_url("https://one.one.one.one")
+        await o_url.f_update_a_s_ip()
+        console.log(o_url)
+        assertEquals(o_url.a_s_ipv4.filter(s => s == '1.1.1.1'),['1.1.1.1'])
+
+    }
+);
 ```
 
 
 ## geolocation
+```javascript
+Deno.test(
+    "geo location test",
+    async () => {
+        var o_url = new O_url("https://one.one.one.one")
+        await o_url.f_update_o_geolocation()
+        console.log(o_url.o_geolocation)
+        assertEquals(o_url.o_geolocation.ip, "1.1.1.1")
+        assertEquals(o_url.o_geolocation.country, "US")
+        assertEquals(o_url.o_geolocation.city, "Los Angeles")
+        assertEquals(o_url.o_geolocation.region, "California")
+
+    }
+);
+
 ```
-```
+
+## also checkout test.js
 
 # what is a url /  uri ? 
 ![](./readme/url-structure-and-scheme-2022.png)
