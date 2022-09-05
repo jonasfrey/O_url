@@ -38,10 +38,9 @@ class O_url{
         this.a_s_ipv6 = []
         this.o_folder_file = new O_folder_file(this.o_URL.pathname)
         this.s_path = this.o_URL.pathname
-
+        this.o_geolocation = null
         
-        // var s_url = `curl ipinfo.io/216.58.194.46`
-        // this.o_ipinfo = Deno.run('curl ')
+
 
         var s_domainname_trimmed = this.s_domainname.trim()
         if(
@@ -56,6 +55,12 @@ class O_url{
         }
 
         if(this.f_b_ipv4(this.s_domainname)){
+            console.log(this.s_domainname)
+            console.log(this.s_domainname)
+            console.log(this.s_domainname)
+            console.log(this.s_domainname)
+            console.log(this.s_domainname)
+            console.log(this.s_domainname)
             this.s_ipv4 = this.s_domainname
         }
 
@@ -69,6 +74,33 @@ class O_url{
         this._s = value
         this.f_update_all()
     }
+    async f_update_o_geolocation(){
+        var s_ipv4 = this.s_ipv4
+        if(s_ipv4 == ''){
+            await this.f_update_a_s_ip()
+            var s_ipv4 = this.s_ipv4
+        }
+        console.log(this.s_ipv4)
+        // this.o_geolocation = await (await fetch("https://"+s_ipv4)).read();
+        const s_url = `https://ipinfo.io/${s_ipv4}`
+        console.log(s_url)
+        var s_o_geolocation = 
+        await (
+                await (
+                    fetch(
+                        s_url,
+                        { 
+                            headers: { 'Accept': 'application/json'},
+                        }
+                    )
+                )
+        ).text();
+
+        this.o_geolocation = JSON.parse(s_o_geolocation)
+        
+        // var s_url = `curl ipinfo.io
+        // this.o_ipinfo = Deno.run('curl ')
+    }
 
     async f_update_a_s_ip(){
         var a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
@@ -79,8 +111,10 @@ class O_url{
 
             if(this.f_b_ipv4(s_ip)){
                 this.a_s_ipv4.push(s_ip)
+                this.s_ipv4 = s_ip
             }else{
                 this.a_s_ipv6.push(s_ip)
+                this.s_ipv6 = s_ip
             }
         }
 
@@ -124,9 +158,11 @@ class O_url{
     }
     
     f_b_ipv4(s){
-        var a_n = this.s_domainname.trim().split('.')
+        var a_n = s.trim().split('.')
         var self = this
-        if(a_n.length == 4 && a_n.filter(n => self.f_b_string_is_numeric(n).length == 4)){
+        var a_n_filtered = a_n.filter(n => self.f_b_string_is_numeric(n))
+        // console.log(a_n_filtered)
+        if(a_n.length == 4 && a_n_filtered.length == 4){
             return true
         }
         return false

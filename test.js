@@ -65,3 +65,18 @@ Deno.test(
         // assertEquals(o_url.o_folder_file.s_file_name, "index.html")
     }
 );
+
+
+Deno.test(
+    "geo location test",
+    async () => {
+        var o_url = new O_url("https://one.one.one.one")
+        await o_url.f_update_o_geolocation()
+        console.log(o_url.o_geolocation)
+        assertEquals(o_url.o_geolocation.ip, "1.1.1.1")
+        assertEquals(o_url.o_geolocation.country, "US")
+        assertEquals(o_url.o_geolocation.city, "Los Angeles")
+        assertEquals(o_url.o_geolocation.region, "California")
+
+    }
+);
