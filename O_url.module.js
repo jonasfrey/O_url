@@ -75,17 +75,19 @@ class O_url{
         this.f_update_all()
     }
     async f_update_o_geolocation(){
-        var s_ipv4 = this.s_ipv4
-        if(s_ipv4 == ''){
-            await this.f_update_a_s_ip()
+        return new Promise( async (f_resolve) => {
+
             var s_ipv4 = this.s_ipv4
-        }
-        console.log(this.s_ipv4)
-        // this.o_geolocation = await (await fetch("https://"+s_ipv4)).read();
-        const s_url = `https://ipinfo.io/${s_ipv4}`
-        console.log(s_url)
-        var s_o_geolocation = 
-        await (
+            if(s_ipv4 == ''){
+                await this.f_update_a_s_ip()
+                var s_ipv4 = this.s_ipv4
+            }
+            console.log(this.s_ipv4)
+            // this.o_geolocation = await (await fetch("https://"+s_ipv4)).read();
+            const s_url = `https://ipinfo.io/${s_ipv4}`
+            console.log(s_url)
+            var s_o_geolocation = 
+            await (
                 await (
                     fetch(
                         s_url,
@@ -94,67 +96,78 @@ class O_url{
                         }
                     )
                 )
-        ).text();
-
-        this.o_geolocation = JSON.parse(s_o_geolocation)
-        
+            ).text();
+                        
+            this.o_geolocation = JSON.parse(s_o_geolocation)
+            f_resolve() 
+        })
         // var s_url = `curl ipinfo.io
         // this.o_ipinfo = Deno.run('curl ')
     }
 
     async f_update_a_s_ip(){
-        var a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
-        this.a_s_ipv4 = []
-        this.a_s_ipv6 = []
-        for(var n_i in a_s_ip){
-            var s_ip = a_s_ip[n_i]
+        return new Promise(async (f_resolve)=>{
 
-            if(this.f_b_ipv4(s_ip)){
-                this.a_s_ipv4.push(s_ip)
-                this.s_ipv4 = s_ip
-            }else{
-                this.a_s_ipv6.push(s_ip)
-                this.s_ipv6 = s_ip
+            var a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
+            this.a_s_ipv4 = []
+            this.a_s_ipv6 = []
+            for(var n_i in a_s_ip){
+                var s_ip = a_s_ip[n_i]
+                
+                if(this.f_b_ipv4(s_ip)){
+                    this.a_s_ipv4.push(s_ip)
+                    this.s_ipv4 = s_ip
+                }else{
+                    this.a_s_ipv6.push(s_ip)
+                    this.s_ipv6 = s_ip
+                }
             }
-        }
-
+            f_resolve()  
+        })
     }
 
     async f_a_s_ip_by_s_domainname(s_domainname){
-        const o_process = Deno.run(
-            {
-                cmd:['nslookup', s_domainname], 
-                stdout: "piped",
-                stderr: "piped",
-            }
-        )
-        const { n_code } = await o_process.status();
-        var a_s_address = []
-        const raw_output = await o_process.output();
-        await o_process.close()
-        await o_process.stderr.close()
-        const s_text = new TextDecoder().decode(raw_output);
-        const a_s_line = s_text.split('\n');
-        const s_search_name = "Name:"
-        const s_search_address = "Address:"
-        var b_search_name = false
-        var b_search_address = false
+        return new Promise(async (f_resolve) => {
 
-        for(var n_i in a_s_line){
-            var s_line = a_s_line[n_i]
-            if(s_line.indexOf(s_search_name) == 0){
-                b_search_name = true
-                continue
+            const o_process = Deno.run(
+                {
+                    cmd:['nslookup', s_domainname], 
+                    stdout: "piped",
+                    stderr: "piped",
+                }
+            )
+            const { n_code } = await o_process.status();
+            const raw_output = await o_process.output();
+            const raw_error_output = await o_process.stderrOutput();
+            await o_process.close()
+            
+            // const raw_output_err = await o_process.sdterrOutput();
+            var a_s_address = []
+
+            const s_text = new TextDecoder().decode(raw_output);
+            const a_s_line = s_text.split('\n');
+            const s_search_name = "Name:"
+            const s_search_address = "Address:"
+            var b_search_name = false
+            var b_search_address = false
+    
+            for(var n_i in a_s_line){
+                var s_line = a_s_line[n_i]
+                if(s_line.indexOf(s_search_name) == 0){
+                    b_search_name = true
+                    continue
+                }
+                if(b_search_name && s_line.indexOf(s_search_address) == 0){
+                    a_s_address.push(s_line.slice(s_search_address.length).trim())
+                }
+                b_search_address = false
+                b_search_name = false
             }
-            if(b_search_name && s_line.indexOf(s_search_address) == 0){
-                a_s_address.push(s_line.slice(s_search_address.length).trim())
-            }
-            b_search_address = false
-            b_search_name = false
-        }
-        return a_s_address
-        // console.log(raw_output)
-        // return raw_output
+
+
+            f_resolve(a_s_address)
+
+        })
     }
     
     f_b_ipv4(s){

@@ -43,7 +43,7 @@ Deno.test(
         var o_url = new O_url("https://one.one.one.one")
         await o_url.f_update_a_s_ip()
         console.log(o_url)
-        assertEquals(o_url.a_s_ipv4.filter(s => s == '1.1.1.1'),['1.1.1.1'])
+        assertEquals(o_url.a_s_ipv4.indexOf("1.1.1.1")!=-1,true)
 
     }
 );
@@ -73,10 +73,42 @@ Deno.test(
         var o_url = new O_url("https://one.one.one.one")
         await o_url.f_update_o_geolocation()
         console.log(o_url.o_geolocation)
-        assertEquals(o_url.o_geolocation.ip, "1.1.1.1")
+        assertEquals(["1.1.1.1", "1.0.0.1"].indexOf(o_url.o_geolocation.ip) != -1, true)
         assertEquals(o_url.o_geolocation.country, "US")
         assertEquals(o_url.o_geolocation.city, "Los Angeles")
         assertEquals(o_url.o_geolocation.region, "California")
+
+    }
+);
+
+
+
+await Deno.test(
+    "dns async test",
+    async () => {
+        var o_url = new O_url("https://one.one.one.one")
+        return o_url.f_update_a_s_ip().then(
+            function(){
+                assertEquals("", "")
+                // assertEquals(o.a_s_ipv4.filter(s => s == '1.1.1.1'),['1.1.1.1'])
+            }
+        )
+    }
+);
+
+
+Deno.test(
+    "geo location async test",
+    async () => {
+        var o_url = new O_url("https://one.one.one.one")
+        return o_url.f_update_o_geolocation().then(function(){
+            console.log(o_url.o_geolocation)
+            assertEquals(["1.1.1.1", "1.0.0.1"].indexOf(o_url.o_geolocation.ip) != -1, true)
+            assertEquals(o_url.o_geolocation.country, "US")
+            assertEquals(o_url.o_geolocation.city, "Los Angeles")
+            assertEquals(o_url.o_geolocation.region, "California")
+        })
+
 
     }
 );
