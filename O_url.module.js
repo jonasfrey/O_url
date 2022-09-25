@@ -55,12 +55,6 @@ class O_url{
         }
 
         if(this.f_b_ipv4(this.s_domainname)){
-            console.log(this.s_domainname)
-            console.log(this.s_domainname)
-            console.log(this.s_domainname)
-            console.log(this.s_domainname)
-            console.log(this.s_domainname)
-            console.log(this.s_domainname)
             this.s_ipv4 = this.s_domainname
         }
 
@@ -82,10 +76,10 @@ class O_url{
                 await this.f_update_a_s_ip()
                 var s_ipv4 = this.s_ipv4
             }
-            console.log(this.s_ipv4)
+            // console.log(this.s_ipv4)
             // this.o_geolocation = await (await fetch("https://"+s_ipv4)).read();
             const s_url = `https://ipinfo.io/${s_ipv4}`
-            console.log(s_url)
+            // console.log(s_url)
             var s_o_geolocation = 
             await (
                 await (
