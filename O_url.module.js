@@ -69,11 +69,17 @@ class O_url{
         this.f_update_all()
     }
     async f_update_o_geolocation(){
-        return new Promise( async (f_resolve) => {
+        return new Promise( async (
+            f_resolve,
+            f_reject) => {
 
             var s_ipv4 = this.s_ipv4
             if(s_ipv4 == ''){
-                await this.f_update_a_s_ip()
+                try {
+                    await this.f_update_a_s_ip()
+                } catch (error) {
+                    return f_reject(error)
+                }
                 var s_ipv4 = this.s_ipv4
             }
             // console.log(this.s_ipv4)
@@ -100,9 +106,16 @@ class O_url{
     }
 
     async f_update_a_s_ip(){
-        return new Promise(async (f_resolve)=>{
-
-            var a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
+        return new Promise(async (
+            f_resolve,
+            f_reject
+            )=>{
+            var a_s_ip = null;
+            try {
+                a_s_ip = await this.f_a_s_ip_by_s_domainname(this.s_domainname)
+            } catch (error) {
+                return f_reject(error)
+            }
             this.a_s_ipv4 = []
             this.a_s_ipv6 = []
             for(var n_i in a_s_ip){
@@ -136,7 +149,7 @@ class O_url{
                 )
             } catch (error) {
                 // console.log(error)
-                f_reject('make sure "nslookup" is installed and executable on this system')
+                return f_reject('make sure "nslookup" is installed and executable on this system')
             }
             const { n_code } = await o_process.status();
             const raw_output = await o_process.output();
