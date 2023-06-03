@@ -121,15 +121,23 @@ class O_url{
     }
 
     async f_a_s_ip_by_s_domainname(s_domainname){
-        return new Promise(async (f_resolve) => {
-
-            const o_process = Deno.run(
-                {
-                    cmd:['nslookup', s_domainname], 
-                    stdout: "piped",
-                    stderr: "piped",
-                }
-            )
+        return new Promise(async (
+            f_resolve, 
+            f_reject
+            ) => {
+            let o_process = null;
+            try {
+                o_process = Deno.run(
+                    {
+                        cmd:['nslookup', s_domainname], 
+                        stdout: "piped",
+                        stderr: "piped",
+                    }
+                )
+            } catch (error) {
+                // console.log(error)
+                f_reject('make sure "nslookup" is installed and executable on this system')
+            }
             const { n_code } = await o_process.status();
             const raw_output = await o_process.output();
             const raw_error_output = await o_process.stderrOutput();
